@@ -3,6 +3,7 @@ library(shinydashboard)
 library(DT)
 library(janitor)
 library(ggplot2)
+library(readxl)   # dirty_data.xlsx를 읽으려면...
 
 ui <- dashboardPage(
   dashboardHeader(title = "Beautiful Shiny Dashboard"),
@@ -20,7 +21,7 @@ ui <- dashboardPage(
                 box(
                   title = "데이터 업로드 및 보기",
                   width = 12,
-                  fileInput("file", "csv 데이터 업로드"),
+                  fileInput("file", "csv/xlsx 데이터 업로드", accept = c(".csv", ".xls", ".xlsx")),
                   checkboxInput("apply_clean_names", "컬럼명 일괄정제(clean_names)", TRUE),
                   checkboxInput("apply_na_rm", "결측치(NA) 포함 행 삭제", FALSE),
                   checkboxInput("apply_outlier_rm", "이상치 행 삭제(수치형만)", FALSE),
@@ -82,10 +83,20 @@ server <- function(input, output, session) {
   
   
   # 원본 데이터 reactive
+
   raw_data <- reactive({
     req(input$file)
-    read.csv(input$file$datapath, stringsAsFactors = FALSE)
+    ext <- tools::file_ext(input$file$datapath)
+    if (tolower(ext) %in% c("xls", "xlsx")) {
+      readxl::read_excel(input$file$datapath)
+    } else if (tolower(ext) == "csv") {
+      read.csv(input$file$datapath, stringsAsFactors = FALSE)
+    } else {
+      showNotification("지원하지 않는 파일 형식입니다.", type = "error")
+      NULL
+    }
   })
+  
   
   # 변수명 수동 입력값 모음
   rename_vars <- reactive({
