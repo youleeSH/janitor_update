@@ -1,5 +1,3 @@
-# Tests for removing NA rows or columns (use cutoff)
-
 dat <- data.frame(
   A = c(NA, NA, NA, NA, 1),
   B = c(1, 2, 3, 4, 5),

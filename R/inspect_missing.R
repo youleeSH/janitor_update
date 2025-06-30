@@ -1,3 +1,30 @@
+#' Visualize the percentage of missing values for each variable
+#'
+#' This function calculates the proportion of missing (NA) values for each column
+#' in a data frame and visualizes the results as a horizontal bar plot using ggplot2.
+#' Useful for quickly identifying variables with a high proportion of missing data.
+#'
+#' @param df A `data.frame` (or tibble) whose missing values you want to visualize.
+#' @param sort Logical. If TRUE (default), variables are sorted in descending order of missingness.
+#' @param top_n Optional. If provided, only the top_n variables with the highest percentage of missing values are shown.
+#'
+#' @return A `ggplot` object showing the percentage of missing values per variable.
+#' @export
+#'
+#' @examples
+#' # Example with base data
+#' df <- data.frame(
+#'   A = c(1, NA, 3),
+#'   B = c(NA, NA, 6),
+#'   C = c(7, 8, 9),
+#'   stringsAsFactors = FALSE
+#' )
+#' inspect_missing(df)
+#'
+#' # Example with mtcars (with simulated missing values)
+#' df2 <- mtcars
+#' df2[c(1, 3), "mpg"] <- NA
+#' inspect_missing(df2)
 inspect_missing <- function(df, sort = TRUE, top_n = NULL) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("Please install ggplot2 to use this function.")
