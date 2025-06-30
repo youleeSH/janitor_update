@@ -11,6 +11,12 @@
 #' Alternatively, you can tabulate a single variable that isn't in a `data.frame`
 #'  by calling `tabyl()` on a vector, e.g., `tabyl(mtcars$gear)`.
 #'
+#' @details
+#' For one to three variables, `tabyl()` returns frequency tables with counts and percentages.
+#' When four or more variables are supplied, the function delegates counting to
+#' `tabyl_nway()`, which returns a frequency table of all variable combinations
+#' but does not compute percentages or split into nested lists.
+#'
 #' @param dat A `data.frame` containing the variables you wish to count.
 #'   Or, a vector you want to tabulate.
 #' @param var1 The column name of the first variable.
