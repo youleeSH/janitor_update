@@ -154,7 +154,18 @@ tabyl.default <- function(dat, show_na = TRUE, show_missing_levels = TRUE, ...) 
 #' @export
 #' @rdname tabyl
 # Main dispatching function to underlying functions depending on whether "..." contains 1, 2, or 3 variables
-tabyl.data.frame <- function(dat, var1, var2, var3, show_na = TRUE, show_missing_levels = TRUE, ...) {
+tabyl.data.frame <- function(dat, ..., show_na = TRUE, show_missing_levels = TRUE) {
+  vars <- rlang::ensyms(...)
+  if (length(vars) >= 4) {
+    return(
+      tabyl_nway(
+        dat,
+        !!!vars,
+        show_na = show_na,
+        show_missing_levels = show_missing_levels
+      )
+    )
+  }
   if (missing(var1) && missing(var2) && missing(var3)) {
     stop("if calling on a data.frame, specify unquoted column names(s) to tabulate.  Did you mean to call tabyl() on a vector?")
   }
