@@ -163,7 +163,7 @@ test_that("bizarre combination of %>%, quotes, and spaces in names is handled", 
     check.names = FALSE,
     stringsAsFactors = FALSE
   )
-
+  
   expect_equal(
     tabyl(dat$`The candidate(s) applied directly to my school` %>% gsub("hi", "there", .)) %>%
       names() %>%
@@ -182,25 +182,26 @@ test_that("grouped data.frame inputs are handled (#125)", {
 
 test_that("if called on non-existent vector, returns useful error message", {
   expect_error(tabyl(mtcars$moose), "object mtcars\\$moose not found")
-  expect_error(tabyl(moose), "object 'moose' not found")
+  expect_error(tabyl(moose), regexp = "object 'moose' not found|객체 'moose'를 찾을 수 없습니다")
   expect_error(mtcars %>% tabyl(moose))
 })
 
 test_that("if called on data.frame with no or irregular columns specified, returns informative error message", {
-  expect_error(tabyl(mtcars), "if calling on a data.frame, specify unquoted column names(s) to tabulate.  Did you mean to call tabyl() on a vector?",
-    fixed = TRUE
+  expect_error(tabyl(mtcars), "if calling on a data.frame, specify unquoted column name(s) to tabulate. Did you mean to call tabyl() on a vector?",
+               fixed = TRUE
   )
+  
   expect_error(tabyl(mtcars, var2 = am),
-    "please specify var1 OR var1 & var2 OR var1 & var2 & var3",
-    fixed = TRUE
+               "please specify var1 OR var1 & var2 OR var1 & var2 & var3",
+               fixed = TRUE
   )
 })
 
 test_that("fails if called on a non-data.frame list", { # it's not meant to do this and result will likely be garbage, so fail
   L <- list(a = 1, b = "rstats")
   expect_error(tabyl(L),
-    "tabyl() is meant to be called on vectors and data.frames; convert non-data.frame lists to one of these types",
-    fixed = TRUE
+               "tabyl() is meant to be called on vectors and data.frames; convert non-data.frame lists to one of these types",
+               fixed = TRUE
   )
 })
 
@@ -216,7 +217,7 @@ test_that("show_missing_levels parameter works", {
     row.names = c(NA, -1L), class = c("tbl_df", "tbl", "data.frame"),
     .Names = c("a", "b", "new")
   )
-
+  
   expect_equal(
     z %>% tabyl(a, b, new, show_missing_levels = TRUE),
     list(lvl1 = data.frame(
@@ -233,7 +234,7 @@ test_that("show_missing_levels parameter works", {
       small = c(1)
     ) %>% as_tabyl(2, "a", "b")
   )
-
+  
   # Works with numerics
   expect_equal(
     mtcars %>% tabyl(cyl, am),
@@ -268,7 +269,7 @@ test_that("NA levels get moved to the last column in the data.frame, are suppres
       NA_ = c(1, 0, 1)
     )
   )
-
+  
   expect_equal(
     tabyl(x, a, b, show_na = FALSE) %>%
       untabyl(),
@@ -278,7 +279,7 @@ test_that("NA levels get moved to the last column in the data.frame, are suppres
       up = c(1, 3)
     )
   )
-
+  
   # one-way suppression
   expect_equal(
     tabyl(x$a, show_na = FALSE) %>%
@@ -290,7 +291,7 @@ test_that("NA levels get moved to the last column in the data.frame, are suppres
       check.names = FALSE
     )
   )
-
+  
   # NA level is shown in 3 way split
   y <- x %>% tabyl(c, a, b, show_missing_levels = FALSE)
   expect_equal(length(y), 3)
@@ -301,7 +302,7 @@ test_that("NA levels get moved to the last column in the data.frame, are suppres
       dplyr::filter(is.na(b)) %>%
       tabyl(c, a)
   )
-
+  
   y_with_missing <- x %>% tabyl(c, a, b, show_missing_levels = TRUE)
   expect_equal(length(y_with_missing), 3)
   expect_equal(names(y_with_missing), c("down", "up", "NA_"))
@@ -311,20 +312,20 @@ test_that("NA levels get moved to the last column in the data.frame, are suppres
   )
   # If no NA in 3rd variable, it doesn't appear in split list
   expect_equal(length(dplyr::starwars %>%
-    dplyr::filter(species == "Human") %>%
-    tabyl(eye_color, skin_color, gender, show_missing_levels = TRUE)), 2)
-
+                        dplyr::filter(species == "Human") %>%
+                        tabyl(eye_color, skin_color, gender, show_missing_levels = TRUE)), 2)
+  
   # If there is NA, it does appear in split list
   expect_equal(length(dplyr::starwars %>%
-    tabyl(eye_color, skin_color, gender, show_missing_levels = TRUE)), 3)
+                        tabyl(eye_color, skin_color, gender, show_missing_levels = TRUE)), 3)
   expect_equal(length(dplyr::starwars %>%
-    tabyl(eye_color, skin_color, gender, show_missing_levels = FALSE)), 3)
-
+                        tabyl(eye_color, skin_color, gender, show_missing_levels = FALSE)), 3)
+  
   # NA level in the list gets suppressed if show_na = FALSE.  Should have one less level if NA is suppressed.
   expect_equal(length(dplyr::starwars %>%
-    tabyl(eye_color, skin_color, gender, show_na = TRUE)), 3)
+                        tabyl(eye_color, skin_color, gender, show_na = TRUE)), 3)
   expect_equal(length(dplyr::starwars %>%
-    tabyl(eye_color, skin_color, gender, show_na = FALSE)), 2)
+                        tabyl(eye_color, skin_color, gender, show_na = FALSE)), 2)
 })
 
 test_that("tabyl fill 0s with show_missing_levels = FALSE", {
@@ -343,7 +344,7 @@ test_that("zero-row and fully-NA inputs are handled", {
   zero_vec <- character(0)
   expect_equal(nrow(tabyl(zero_vec)), 0)
   expect_equal(names(tabyl(zero_vec)), c("zero_vec", "n", "percent"))
-
+  
   zero_df <- data.frame(a = character(0), b = character(0))
   expect_message(
     expect_equal(nrow(tabyl(zero_df, a, b)), 0)
@@ -352,7 +353,7 @@ test_that("zero-row and fully-NA inputs are handled", {
     expect_equal(names(tabyl(zero_df, a, b)), "a"),
     "No records to count so returning a zero-row tabyl"
   )
-
+  
   all_na_df <- data.frame(a = c(NA, NA), b = c(NA_character_, NA_character_))
   expect_message(
     expect_equal(tabyl(all_na_df, a, b, show_na = FALSE) %>% nrow(), 0)
@@ -381,7 +382,7 @@ test_that("the dplyr warning suggesting forcats::fct_explicit_na that is generat
     b = 1:3
   )
   expect_silent(xx %>%
-    tabyl(a, b))
+                  tabyl(a, b))
 })
 
 test_that("3-way tabyl with 3rd var factor is listed in right order, #250", {
@@ -409,7 +410,7 @@ test_that("tabyl works with label attributes (#394)", {
 test_that("tabyl works with ordered 1st variable, #386", {
   mt_ordered <- mtcars
   mt_ordered$cyl <- ordered(mt_ordered$cyl, levels = c("4", "8", "6"))
-
+  
   ordered_3way <- mt_ordered %>%
     tabyl(cyl, gear, am)
   expect_equal(class(ordered_3way[[1]]$cyl), c("ordered", "factor")) # 1st col in resulting tabyl
@@ -419,10 +420,10 @@ test_that("tabyl works with ordered 1st variable, #386", {
 test_that("factor ordering of columns is correct in 2-way tabyl", {
   two_factors <- data.frame(
     x = factor(c("big", "small", "medium", "small"),
-      levels = c("small", "medium", "big")
+               levels = c("small", "medium", "big")
     ),
     y = factor(c("hi", "hi", "hi", "lo"),
-      levels = c("lo", "hi")
+               levels = c("lo", "hi")
     )
   )
   expect_equal(
@@ -457,10 +458,10 @@ test_that("3way tabyls with factors in cols 1-2 are arranged correctly, #379", {
     ),
     stringsAsFactors = TRUE
   )
-
+  
   tabyl_3wf <- dat_3wayfactors %>%
     tabyl(bmi_group, age_group, gender, show_missing_levels = FALSE)
-
+  
   expect_equal(names(tabyl_3wf$m), c("bmi_group", "46-55", ">55"))
   expect_equal(
     tabyl_3wf$f[[1]],
@@ -498,10 +499,59 @@ test_that("3-way tabyl with numeric names is sorted numerically", {
     names(mtcars %>% tabyl(gear, cyl, hp)),
     as.character(sort(unique(mtcars$hp)))
   )
-
+  
   # Check putting NA last - data.frame "x" is created way above
   expect_equal(
     names(x %>% tabyl(a, c, d)),
     c(2:10, "NA_")
   )
 })
+
+test_that("tabyl handles 4 or more variables via tabyl_nway (without filling missing)", {
+  df <- data.frame(
+    x = c("A", "A", "B", "A", "B"),
+    y = c("M", "M", "N", "M", "M"),
+    z = c("Q", "Q", "R", "Q", "Q"),
+    w = c("T", "T", "T", "S", "T"),
+    stringsAsFactors = FALSE
+  )
+  
+  result <- tabyl(df, x, y, z, w, show_missing_levels = FALSE)
+  
+  expected <- data.frame(
+    x = c("A", "A", "B", "B"),
+    y = c("M", "M", "N", "M"),
+    z = c("Q", "Q", "R", "Q"),
+    w = c("T", "S", "T", "T"),
+    n = c(2, 1, 1, 1),
+    stringsAsFactors = FALSE
+  )
+  class(expected) <- c("tabyl_nway", "data.frame")
+  
+  expect_equal(
+    dplyr::arrange(result, x, y, z, w),
+    dplyr::arrange(expected, x, y, z, w)
+  )
+})
+
+test_that("tabyl_nway returns class 'tabyl_nway'", {
+  df <- data.frame(a = c(1, 1, 2), b = c(1, 2, 2), c = c(1, 1, 1), d = c(1, 1, 2))
+  result <- tabyl(df, a, b, c, d)
+  expect_s3_class(result, "tabyl_nway")
+})
+
+
+
+test_that("tabyl_nway respects show_na = FALSE", {
+  df <- data.frame(
+    x = c("A", "B", NA, "A"),
+    y = c("Y", "Y", "Y", "Y"),
+    z = c("Z", NA, "Z", "Z"),
+    w = c("W", "W", "W", NA)
+  )
+  
+  result <- tabyl(df, x, y, z, w, show_na = FALSE)
+  
+  expect_true(all(complete.cases(result[, 1:4])))
+})
+
