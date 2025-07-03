@@ -1,4 +1,3 @@
-##########################################################
 # 권장 패키지 자동설치
 req_pkgs <- c("shiny", "shinydashboard", "DT", "janitor", "ggplot2", "readxl", "dplyr", "lubridate")
 for(pkg in req_pkgs) if(!requireNamespace(pkg, quietly = TRUE)) install.packages(pkg)
@@ -12,7 +11,64 @@ library(readxl)
 library(dplyr)
 library(lubridate)
 
-# 자동 타입 변환 (초기값으로만 사용)
+# --- 결측/이상치 함수 정의 ---
+inspect_missing <- function(df, sort = TRUE, top_n = NULL) {
+  miss_pct <- sapply(df, function(x) mean(is.na(x)))
+  miss_df <- data.frame(
+    variable = names(miss_pct),
+    missing_pct = miss_pct,
+    stringsAsFactors = FALSE
+  )
+  if (sort) {
+    miss_df <- miss_df[order(-miss_df$missing_pct), ]
+  }
+  if (!is.null(top_n)) {
+    miss_df <- head(miss_df, top_n)
+  }
+  ggplot(miss_df, aes(x = reorder(variable, -missing_pct), y = missing_pct)) +
+    geom_bar(stat = "identity", fill = "tomato") +
+    coord_flip() +
+    labs(title = "Missing Value Percentage by Variable",
+         x = "Variable", y = "Missing %") +
+    theme_minimal()
+}
+
+identify_outliers <- function(df, method = c("iqr", "zscore", "percentile"), 
+                              columns = NULL, z_thresh = 3, 
+                              lower_percentile = 0.01, upper_percentile = 0.99) {
+  method <- match.arg(method)
+  if (!is.data.frame(df)) stop("df must be a data.frame or tibble.")
+  if (is.null(columns)) {
+    numeric_cols <- sapply(df, is.numeric)
+    columns <- names(df)[numeric_cols]
+  }
+  outlier_flags <- data.frame(row = 1:nrow(df))
+  for (col in columns) {
+    if (!col%in% names(df)){
+      stop(paste0("Column '",col,"' does not exist in the data frame."))
+    }
+    vec <- df[[col]]
+    if (method == "iqr") {
+      Q1 <- quantile(vec, 0.25, na.rm = TRUE)
+      Q3 <- quantile(vec, 0.75, na.rm = TRUE)
+      IQR <- Q3 - Q1
+      lower <- Q1 - 1.5 * IQR
+      upper <- Q3 + 1.5 * IQR
+      outlier_flags[[col]] <- vec < lower | vec > upper
+    } else if (method == "zscore") {
+      z <- scale(vec)
+      outlier_flags[[col]] <- abs(z) > z_thresh
+    } else if (method == "percentile") {
+      lower <- quantile(vec, lower_percentile, na.rm = TRUE)
+      upper <- quantile(vec, upper_percentile, na.rm = TRUE)
+      outlier_flags[[col]] <- vec < lower | vec > upper
+    }
+  }
+  outlier_flags$total_outliers <- rowSums(outlier_flags[ , -1,drop=FALSE], na.rm = TRUE)
+  outlier_flags$outlier_row <- outlier_flags$total_outliers > 0
+  return(outlier_flags)
+}
+# --- 타입 자동 변환 함수 ---
 auto_convert_types <- function(df) {
   for (col in names(df)) {
     if (is.character(df[[col]])) {
@@ -40,6 +96,7 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       menuItem("데이터 업로드/정제", tabName = "data", icon = icon("table")),
+      menuItem("결측/이상치 탐색", tabName = "missout", icon = icon("exclamation-circle")),
       menuItem("시각화", tabName = "viz", icon = icon("chart-bar"))
     )
   ),
@@ -80,6 +137,21 @@ ui <- dashboardPage(
               ),
               fluidRow(
                 box(title = "중복 행 미리보기", width = 12, DTOutput("dupes_table"))
+              )
+      ),
+      # 결측/이상치 탐색 탭 추가
+      tabItem(tabName = "missout",
+              fluidRow(
+                box(title = "결측치 비율 시각화", width = 6,
+                    plotOutput("missing_plot"),
+                    DTOutput("missing_table")
+                ),
+                box(title = "이상치 탐색 및 시각화", width = 6,
+                    selectInput("outlier_method", "이상치 탐색법", c("iqr", "zscore", "percentile")),
+                    uiOutput("outlier_var"),
+                    DTOutput("outlier_table"),
+                    plotOutput("outlier_plot", height = 300)
+                )
               )
       ),
       tabItem(tabName = "viz",
@@ -228,7 +300,44 @@ server <- function(input, output, session) {
     })
   })
   
-  # 5. 시각화 변수 선택 옵션
+  # -------- 결측/이상치 탐색/시각화 ---------
+  # 결측치 비율 plot/table
+  output$missing_plot <- renderPlot({
+    req(cleaned_data())
+    inspect_missing(cleaned_data())
+  })
+  output$missing_table <- renderDT({
+    req(cleaned_data())
+    miss_pct <- sapply(cleaned_data(), function(x) mean(is.na(x)))
+    datatable(data.frame(변수=names(miss_pct), 결측비율=round(miss_pct, 3)),
+              options = list(pageLength = 10, scrollX = TRUE))
+  })
+  output$outlier_var <- renderUI({
+    req(cleaned_data())
+    num_vars <- names(cleaned_data())[sapply(cleaned_data(), is.numeric)]
+    checkboxGroupInput("outlier_vars", "이상치 탐색 변수(복수선택)", choices = num_vars, selected = num_vars)
+  })
+  output$outlier_table <- renderDT({
+    req(cleaned_data(), input$outlier_vars)
+    flag <- identify_outliers(cleaned_data(), method = input$outlier_method, columns = input$outlier_vars)
+    datatable(flag, options = list(pageLength = 10, scrollX = TRUE))
+  })
+  output$outlier_plot <- renderPlot({
+    req(cleaned_data(), input$outlier_vars)
+    df <- cleaned_data()
+    flag <- identify_outliers(df, method = input$outlier_method, columns = input$outlier_vars)
+    vars <- input$outlier_vars
+    if (length(vars) == 0) return()
+    par(mfrow = c(1, length(vars)))
+    for (v in vars) {
+      boxplot(df[[v]], main = paste(v, "이상치(빨간점)"), col = "#b2df8a", outline = TRUE)
+      out_idx <- which(flag[[v]])
+      if (length(out_idx) > 0) points(rep(1, length(out_idx)), df[[v]][out_idx], col = "red", pch = 19)
+    }
+    par(mfrow = c(1,1))
+  })
+  
+  # ---- 이하 시각화 코드는 이전과 동일 -----
   get_data_for_plot <- reactive({
     if (isTRUE(input$show_cleaned_plot)) cleaned_data() else raw_data()
   })
@@ -270,8 +379,7 @@ server <- function(input, output, session) {
     type <- class(get_data_for_plot()[[input$var3]])[1]
     HTML(paste0("<b>", input$var3, "</b> 타입: <span style='color:#0072B2'>", type, "</span>"))
   })
-  
-  # 슬라이더도 그대로 추가 (생략 가능, 이전 코드 참고)
+  # 슬라이더
   output$slider_var1 <- renderUI({
     req(input$var1, get_data_for_plot())
     x <- get_data_for_plot()[[input$var1]]
@@ -301,7 +409,6 @@ server <- function(input, output, session) {
     plt_type <- input$plot_type
     if (!is.null(input$xrange) && is.numeric(df[[v1]])) df <- df[df[[v1]] >= input$xrange[1] & df[[v1]] <= input$xrange[2], , drop=FALSE]
     if (!is.null(input$yrange) && !is.null(v2) && is.numeric(df[[v2]])) df <- df[df[[v2]] >= input$yrange[1] & df[[v2]] <= input$yrange[2], , drop=FALSE]
-    # 시각화 로직은 이전과 동일하게!
     if (nvar == "1개") {
       v <- v1
       if (plt_type == "자동") {
@@ -368,7 +475,3 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
-
-#####################################################3
-##########################################################
-
