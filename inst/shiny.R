@@ -36,7 +36,6 @@ for(pkg in req_pkgs) if(!requireNamespace(pkg, quietly = TRUE)) install.packages
 library(shiny)
 library(shinydashboard)
 library(DT)
-library(janitor)
 library(ggplot2)
 library(readxl)
 library(dplyr)
@@ -127,59 +126,59 @@ ui <- dashboardPage(
   dashboardHeader(title = "Beautiful Shiny Dashboard"),
   dashboardSidebar(
     sidebarMenu(
-      menuItem("데이터 업로드/정제", tabName = "data", icon = icon("table")),
-      menuItem("결측/이상치 탐색", tabName = "missout", icon = icon("exclamation-circle")),
-      menuItem("시각화", tabName = "viz", icon = icon("chart-bar"))
+      menuItem("Data Upload/Edit", tabName = "data", icon = icon("table")),
+      menuItem("NA/outlier Detection", tabName = "missout", icon = icon("exclamation-circle")),
+      menuItem("Plot", tabName = "viz", icon = icon("chart-bar"))
     )
   ),
   dashboardBody(
     tabItems(
       tabItem(tabName = "data",
               fluidRow(
-                box(title = "데이터 업로드", width = 12,
-                    fileInput("file", "csv/xlsx 데이터 업로드", accept = c(".csv", ".xls", ".xlsx")),
-                    numericInput("header_row", "헤더로 사용할 행 번호(1부터)", value = 1, min = 1),
-                    checkboxInput("apply_clean_names", "컬럼명 일괄정제(clean_names)", TRUE)
+                box(title = "Upload data", width = 12,
+                    fileInput("file", "csv/xlsx data upload", accept = c(".csv", ".xls", ".xlsx")),
+                    numericInput("header_row", "Select header row (starting from row 1)", value = 1, min = 1),
+                    checkboxInput("apply_clean_names", "Clean column names(clean_names)", TRUE)
                 )
               ),
               fluidRow(
-                box(title = "정제 옵션", width = 12,
-                    checkboxInput("apply_remove_empty", "빈 행/열 삭제(remove_empty)", TRUE),
-                    checkboxInput("apply_remove_constant", "상수 컬럼 삭제(remove_constant)", TRUE),
+                box(title = "Edit option", width = 12,
+                    checkboxInput("apply_remove_empty", "Remove all empty row/column(remove_empty)", TRUE),
+                    checkboxInput("apply_remove_constant", "Remove constant(remove_constant)", TRUE),
                     uiOutput("dupe_cols_select"),
-                    actionButton("find_dupes", "중복 탐색(get_dupes)"),
-                    checkboxInput("apply_remove_dupes", "중복 제거(첫 행만 남김)", FALSE),
-                    checkboxInput("apply_date_convert", "날짜 컬럼 변환(convert_to_date)", FALSE),
+                    actionButton("find_dupes", "Find Duplicates(get_dupes)"),
+                    checkboxInput("apply_remove_dupes", "Delete Duplicates(첫 행만 남김)", FALSE),
+                    checkboxInput("apply_date_convert", "Change date set(convert_to_date)", FALSE),
                     uiOutput("date_col_select"),
-                    checkboxInput("apply_coalesce", "여러 컬럼 합치기(coalesce)", FALSE),
+                    checkboxInput("apply_coalesce", "Merge multiple columns(coalesce)", FALSE),
                     uiOutput("coalesce_col_select"),
-                    textInput("coalesce_new_col", "합친 컬럼명(예: cert)", "cert"),
-                    checkboxInput("remove_coalesced", "합친 뒤 기존 컬럼 삭제", TRUE),
-                    checkboxInput("show_cleaned", "정제 데이터 미리보기", TRUE)
+                    textInput("coalesce_new_col", "Merged columns(예: colname)", "colname"),
+                    checkboxInput("remove_coalesced", "Delete original columns after merge", TRUE),
+                    checkboxInput("show_cleaned", "Preview Edited data", TRUE)
                 )
               ),
               fluidRow(
-                box(title = "변수 타입 직접 변경", width = 12,
+                box(title = "Change datatype", width = 12,
                     uiOutput("type_change_ui"),
-                    actionButton("apply_types", "타입 적용하기")
+                    actionButton("apply_types", "Apply")
                 )
               ),
               fluidRow(
-                box(title = "데이터 테이블", width = 12, DTOutput("data_table"))
+                box(title = "Data table", width = 12, DTOutput("data_table"))
               ),
               fluidRow(
-                box(title = "중복 행 미리보기", width = 12, DTOutput("dupes_table"))
+                box(title = "Duplicates Preview", width = 12, DTOutput("dupes_table"))
               )
       ),
       # 결측/이상치 탐색 탭 추가
       tabItem(tabName = "missout",
               fluidRow(
-                box(title = "결측치 비율 시각화", width = 6,
+                box(title = "Show missing value(NA)", width = 6,
                     plotOutput("missing_plot"),
                     DTOutput("missing_table")
                 ),
-                box(title = "이상치 탐색 및 시각화", width = 6,
-                    selectInput("outlier_method", "이상치 탐색법", c("iqr", "zscore", "percentile")),
+                box(title = "Show outlier", width = 6,
+                    selectInput("outlier_method", "method", c("iqr", "zscore", "percentile")),
                     uiOutput("outlier_var"),
                     DTOutput("outlier_table"),
                     plotOutput("outlier_plot", height = 300)
@@ -188,7 +187,7 @@ ui <- dashboardPage(
       ),
       tabItem(tabName = "viz",
               fluidRow(
-                box(title = "시각화 옵션", width = 4,
+                box(title = "Plot option", width = 4,
                     radioButtons("n_var", "시각화 변수 개수", choices = c("1개", "2개", "3개"), selected = "1개", inline = TRUE),
                     uiOutput("var_select_1"),
                     uiOutput("type_show_1"),
@@ -198,9 +197,9 @@ ui <- dashboardPage(
                     uiOutput("slider_var2"),
                     uiOutput("var_select_3"),
                     uiOutput("type_show_3"),
-                    selectInput("plot_type", "시각화 유형", 
-                                choices = c("자동", "히스토그램", "박스플롯", "산점도", "막대그래프", "비율그래프")),
-                    checkboxInput("show_cleaned_plot", "정제 데이터로 시각화", TRUE),
+                    selectInput("plot_type", "Plot type", 
+                                choices = c("Auto", "Histogram", "Boxplot", "Scatter", "Barplot", "Ratio Chart")),
+                    checkboxInput("show_cleaned_plot", "Visualize with cleaned Data", TRUE),
                     actionButton("draw", "시각화 실행")
                 ),
                 box(title = "그래프", width = 8, plotOutput("plot", height = 400))
