@@ -27,6 +27,7 @@
 #' identify_outliers(airquality, method = "iqr", column = c("Wind", "Temp"))
 #'
 #' @export
+
 identify_outliers <- function(df, 
                               method = c("iqr", "zscore", "percentile"), 
                               column, 
@@ -34,7 +35,7 @@ identify_outliers <- function(df,
                               lower_percentile = 0.01, 
                               upper_percentile = 0.99,
                               visualize = TRUE) {
-
+  
   required_packages <- c("ggplot2", "dplyr", "patchwork")
   for (pkg in required_packages) {
     if (!requireNamespace(pkg, quietly = TRUE)) {
@@ -43,14 +44,14 @@ identify_outliers <- function(df,
     library(pkg, character.only = TRUE)
   }
   
-  if (!is.data.frame(df)) stop("입력은 data.frame 또는 tibble 이어야 합니다.")
+  if (!is.data.frame(df)) stop("Input must be a data.frame or tibble.")
   
-  cat("📌 데이터프레임 변수들의 타입:\n")
+  cat("📌 Data types of the dataframe columns:\n")
   print(sapply(df, class))
   
-  if (missing(column)) stop("❗ 'column' 인자를 지정해야 합니다.")
+  if (missing(column)) stop("❗ Argument 'column' must be specified.")
   if (any(!column %in% names(df))) {
-    stop("❗ 지정한 변수들 중 데이터프레임에 존재하지 않는 변수가 있습니다.")
+    stop("❗ One or more specified columns do not exist in the dataframe.")
   }
   
   method <- match.arg(method)
@@ -58,11 +59,11 @@ identify_outliers <- function(df,
   plots <- list()
   
   for (col in column) {
-    cat(paste0("\n🔍 변수 처리 중: ", col, "\n"))
+    cat(paste0("\n🔍 Processing column: ", col, "\n"))
     
     vec <- df[[col]]
     if (!is.numeric(vec)) {
-      warning(paste0("⚠️ '", col, "' 변수는 수치형이 아니므로 건너뜁니다."))
+      warning(paste0("⚠️ Column '", col, "' is not numeric and will be skipped."))
       next
     }
     
@@ -92,12 +93,11 @@ identify_outliers <- function(df,
       value = vec[outlier_idx]
     )
     
-    cat(paste0("✅ '", col, "' 변수에서 ", nrow(outlier_values), "개의 이상치가 탐지되었습니다:\n"))
+    cat(paste0("✅ Found ", nrow(outlier_values), " outliers in column '", col, "':\n"))
     print(outlier_values)
     
     outlier_results[[col]] <- outlier_values
     
-   
     if (visualize) {
       p <- ggplot(df, aes_string(y = col)) +
         geom_boxplot(outlier.colour = "red", fill = "skyblue", alpha = 0.6, na.rm = TRUE) +
@@ -107,9 +107,8 @@ identify_outliers <- function(df,
     }
   }
   
-  
   if (visualize && length(plots) > 0) {
-    combined_plot <- Reduce(`|`, plots) 
+    combined_plot <- Reduce(`|`, plots)
     print(combined_plot)
   }
   
