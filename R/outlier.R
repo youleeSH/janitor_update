@@ -1,3 +1,32 @@
+#' Identify and visualize outliers in numerical variables
+#'
+#' @description
+#' Detect outliers in one or more numeric columns of a data frame using the IQR, z-score,
+#' or percentile method. Optionally, visualize the results with boxplots.
+#'
+#' If `visualize = TRUE`, boxplots are shown using `ggplot2`, arranged horizontally using `patchwork`.
+#' Outlier detection methods supported:
+#' - `"iqr"`: Outside 1.5 * IQR
+#' - `"zscore"`: Absolute z-score > threshold (default = 3)
+#' - `"percentile"`: Outside given percentiles
+#'
+#' @param df A data.frame or tibble containing numeric columns to analyze.
+#' @param method Outlier detection method: "iqr", "zscore", or "percentile".
+#' @param column A character vector of column names (must be numeric).
+#' @param z_thresh Threshold for the z-score method (default: 3).
+#' @param lower_percentile Lower bound (e.g., 0.01) for percentile method.
+#' @param upper_percentile Upper bound (e.g., 0.99) for percentile method.
+#' @param visualize If TRUE (default), display boxplots for each selected column.
+#'
+#' @return An invisible list with:
+#' \describe{
+#'   \item{outlier_rows}{List of data.frames showing outlier values per column.}
+#'   \item{method_used}{The method used for outlier detection.}
+#' }
+#' @examples
+#' identify_outliers(airquality, method = "iqr", column = c("Wind", "Temp"))
+#'
+#' @export
 identify_outliers <- function(df, 
                               method = c("iqr", "zscore", "percentile"), 
                               column, 
@@ -68,7 +97,7 @@ identify_outliers <- function(df,
     
     outlier_results[[col]] <- outlier_values
     
-    # ✅ 박스플롯 객체만 만들어 저장
+   
     if (visualize) {
       p <- ggplot(df, aes_string(y = col)) +
         geom_boxplot(outlier.colour = "red", fill = "skyblue", alpha = 0.6, na.rm = TRUE) +
@@ -78,9 +107,9 @@ identify_outliers <- function(df,
     }
   }
   
-  # ✅ 화면에 한 번에 여러 박스플롯 출력
+  
   if (visualize && length(plots) > 0) {
-    combined_plot <- Reduce(`|`, plots)  # 좌우로 배치
+    combined_plot <- Reduce(`|`, plots) 
     print(combined_plot)
   }
   
