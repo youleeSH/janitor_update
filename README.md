@@ -212,13 +212,15 @@ counting employees.
 
 #### Tabulating tools
 
-A variable (or combinations of two or three variables) can be tabulated
-with `tabyl()`. The resulting data.frame can be tweaked and formatted
-with the suite of `adorn_` functions for quick analysis and printing of
-pretty results in a report. `adorn_` functions can be helpful with
-non-tabyls, too.
+A variable (or combinations of two variables) can be tabulated with
+`tabyl()`. For three or more variables, use `tabyl_nway()` which returns
+a tidy data.frame of counts for all variable combinations.
 
-#### `tabyl()`
+The resulting data.frame can be tweaked and formatted with the suite of
+`adorn_` functions for quick analysis and printing of pretty results in
+a report. `adorn_` functions can be helpful with non-tabyls, too.
+
+#### `tabyl()` and `tabyl_nway()`
 
 Like `table()`, but pipe-able, data.frame-based, and fully featured.
 
@@ -226,7 +228,7 @@ Like `table()`, but pipe-able, data.frame-based, and fully featured.
 
 - On a vector, when tabulating a single variable:
   `tabyl(roster$subject)`
-- On a data.frame, specifying 1, 2, or 3 variable names to tabulate:
+- On a data.frame, specifying 1 or 2 variable names to tabulate:
   `roster %>% tabyl(subject, employee_status)`.
   - Here the data.frame is passed in with the `%>%` pipe; this allows
     `tabyl` to be used in an analysis pipeline
@@ -261,24 +263,548 @@ roster %>%
 #>          Teacher  3   4
 ```
 
-Three variables:
+Three or more variables (n-way):
 
 ``` r
-roster %>%
-  tabyl(full_time, subject, employee_status, show_missing_levels = FALSE)
-#> $Administration
-#>  full_time Dean
-#>        Yes    1
-#> 
-#> $Coach
-#>  full_time Basketball NA_
-#>         No          1   1
-#> 
-#> $Teacher
-#>  full_time Chemistry Drafting English Music PE Physics Science NA_
-#>         No         0        0       2     0  0       0       1   0
-#>        Yes         1        1       0     1  1       1       0   1
+# tabyl_nway returns a tidy data.frame of all combinations and their frequencies.
+tabyl_nway(roster, full_time, subject, employee_status)
+#>    full_time    subject employee_status n
+#> 1         No Basketball  Administration 0
+#> 2         No Basketball           Coach 1
+#> 3         No Basketball         Teacher 0
+#> 4         No  Chemistry  Administration 0
+#> 5         No  Chemistry           Coach 0
+#> 6         No  Chemistry         Teacher 0
+#> 7         No       Dean  Administration 0
+#> 8         No       Dean           Coach 0
+#> 9         No       Dean         Teacher 0
+#> 10        No   Drafting  Administration 0
+#> 11        No   Drafting           Coach 0
+#> 12        No   Drafting         Teacher 0
+#> 13        No    English  Administration 0
+#> 14        No    English           Coach 0
+#> 15        No    English         Teacher 2
+#> 16        No      Music  Administration 0
+#> 17        No      Music           Coach 0
+#> 18        No      Music         Teacher 0
+#> 19        No         PE  Administration 0
+#> 20        No         PE           Coach 0
+#> 21        No         PE         Teacher 0
+#> 22        No    Physics  Administration 0
+#> 23        No    Physics           Coach 0
+#> 24        No    Physics         Teacher 0
+#> 25        No    Science  Administration 0
+#> 26        No    Science           Coach 0
+#> 27        No    Science         Teacher 1
+#> 28        No       <NA>  Administration 0
+#> 29        No       <NA>           Coach 1
+#> 30        No       <NA>         Teacher 0
+#> 31       Yes Basketball  Administration 0
+#> 32       Yes Basketball           Coach 0
+#> 33       Yes Basketball         Teacher 0
+#> 34       Yes  Chemistry  Administration 0
+#> 35       Yes  Chemistry           Coach 0
+#> 36       Yes  Chemistry         Teacher 1
+#> 37       Yes       Dean  Administration 1
+#> 38       Yes       Dean           Coach 0
+#> 39       Yes       Dean         Teacher 0
+#> 40       Yes   Drafting  Administration 0
+#> 41       Yes   Drafting           Coach 0
+#> 42       Yes   Drafting         Teacher 1
+#> 43       Yes    English  Administration 0
+#> 44       Yes    English           Coach 0
+#> 45       Yes    English         Teacher 0
+#> 46       Yes      Music  Administration 0
+#> 47       Yes      Music           Coach 0
+#> 48       Yes      Music         Teacher 1
+#> 49       Yes         PE  Administration 0
+#> 50       Yes         PE           Coach 0
+#> 51       Yes         PE         Teacher 1
+#> 52       Yes    Physics  Administration 0
+#> 53       Yes    Physics           Coach 0
+#> 54       Yes    Physics         Teacher 1
+#> 55       Yes    Science  Administration 0
+#> 56       Yes    Science           Coach 0
+#> 57       Yes    Science         Teacher 0
+#> 58       Yes       <NA>  Administration 0
+#> 59       Yes       <NA>           Coach 0
+#> 60       Yes       <NA>         Teacher 1
+
+# For four or more variables:
+tabyl_nway(roster, full_time, subject, employee_status, cert)# tabyl_nway returns a tidy data.frame of all combinations and their frequencies.
+#>     full_time    subject employee_status           cert n
+#> 1          No Basketball  Administration   English 6-12 0
+#> 2          No Basketball  Administration   Instr. music 0
+#> 3          No Basketball  Administration        PENDING 0
+#> 4          No Basketball  Administration    Physical ed 0
+#> 5          No Basketball  Administration Political sci. 0
+#> 6          No Basketball  Administration   Science 6-12 0
+#> 7          No Basketball  Administration    Vocal music 0
+#> 8          No Basketball           Coach   English 6-12 0
+#> 9          No Basketball           Coach   Instr. music 0
+#> 10         No Basketball           Coach        PENDING 0
+#> 11         No Basketball           Coach    Physical ed 1
+#> 12         No Basketball           Coach Political sci. 0
+#> 13         No Basketball           Coach   Science 6-12 0
+#> 14         No Basketball           Coach    Vocal music 0
+#> 15         No Basketball         Teacher   English 6-12 0
+#> 16         No Basketball         Teacher   Instr. music 0
+#> 17         No Basketball         Teacher        PENDING 0
+#> 18         No Basketball         Teacher    Physical ed 0
+#> 19         No Basketball         Teacher Political sci. 0
+#> 20         No Basketball         Teacher   Science 6-12 0
+#> 21         No Basketball         Teacher    Vocal music 0
+#> 22         No  Chemistry  Administration   English 6-12 0
+#> 23         No  Chemistry  Administration   Instr. music 0
+#> 24         No  Chemistry  Administration        PENDING 0
+#> 25         No  Chemistry  Administration    Physical ed 0
+#> 26         No  Chemistry  Administration Political sci. 0
+#> 27         No  Chemistry  Administration   Science 6-12 0
+#> 28         No  Chemistry  Administration    Vocal music 0
+#> 29         No  Chemistry           Coach   English 6-12 0
+#> 30         No  Chemistry           Coach   Instr. music 0
+#> 31         No  Chemistry           Coach        PENDING 0
+#> 32         No  Chemistry           Coach    Physical ed 0
+#> 33         No  Chemistry           Coach Political sci. 0
+#> 34         No  Chemistry           Coach   Science 6-12 0
+#> 35         No  Chemistry           Coach    Vocal music 0
+#> 36         No  Chemistry         Teacher   English 6-12 0
+#> 37         No  Chemistry         Teacher   Instr. music 0
+#> 38         No  Chemistry         Teacher        PENDING 0
+#> 39         No  Chemistry         Teacher    Physical ed 0
+#> 40         No  Chemistry         Teacher Political sci. 0
+#> 41         No  Chemistry         Teacher   Science 6-12 0
+#> 42         No  Chemistry         Teacher    Vocal music 0
+#> 43         No       Dean  Administration   English 6-12 0
+#> 44         No       Dean  Administration   Instr. music 0
+#> 45         No       Dean  Administration        PENDING 0
+#> 46         No       Dean  Administration    Physical ed 0
+#> 47         No       Dean  Administration Political sci. 0
+#> 48         No       Dean  Administration   Science 6-12 0
+#> 49         No       Dean  Administration    Vocal music 0
+#> 50         No       Dean           Coach   English 6-12 0
+#> 51         No       Dean           Coach   Instr. music 0
+#> 52         No       Dean           Coach        PENDING 0
+#> 53         No       Dean           Coach    Physical ed 0
+#> 54         No       Dean           Coach Political sci. 0
+#> 55         No       Dean           Coach   Science 6-12 0
+#> 56         No       Dean           Coach    Vocal music 0
+#> 57         No       Dean         Teacher   English 6-12 0
+#> 58         No       Dean         Teacher   Instr. music 0
+#> 59         No       Dean         Teacher        PENDING 0
+#> 60         No       Dean         Teacher    Physical ed 0
+#> 61         No       Dean         Teacher Political sci. 0
+#> 62         No       Dean         Teacher   Science 6-12 0
+#> 63         No       Dean         Teacher    Vocal music 0
+#> 64         No   Drafting  Administration   English 6-12 0
+#> 65         No   Drafting  Administration   Instr. music 0
+#> 66         No   Drafting  Administration        PENDING 0
+#> 67         No   Drafting  Administration    Physical ed 0
+#> 68         No   Drafting  Administration Political sci. 0
+#> 69         No   Drafting  Administration   Science 6-12 0
+#> 70         No   Drafting  Administration    Vocal music 0
+#> 71         No   Drafting           Coach   English 6-12 0
+#> 72         No   Drafting           Coach   Instr. music 0
+#> 73         No   Drafting           Coach        PENDING 0
+#> 74         No   Drafting           Coach    Physical ed 0
+#> 75         No   Drafting           Coach Political sci. 0
+#> 76         No   Drafting           Coach   Science 6-12 0
+#> 77         No   Drafting           Coach    Vocal music 0
+#> 78         No   Drafting         Teacher   English 6-12 0
+#> 79         No   Drafting         Teacher   Instr. music 0
+#> 80         No   Drafting         Teacher        PENDING 0
+#> 81         No   Drafting         Teacher    Physical ed 0
+#> 82         No   Drafting         Teacher Political sci. 0
+#> 83         No   Drafting         Teacher   Science 6-12 0
+#> 84         No   Drafting         Teacher    Vocal music 0
+#> 85         No    English  Administration   English 6-12 0
+#> 86         No    English  Administration   Instr. music 0
+#> 87         No    English  Administration        PENDING 0
+#> 88         No    English  Administration    Physical ed 0
+#> 89         No    English  Administration Political sci. 0
+#> 90         No    English  Administration   Science 6-12 0
+#> 91         No    English  Administration    Vocal music 0
+#> 92         No    English           Coach   English 6-12 0
+#> 93         No    English           Coach   Instr. music 0
+#> 94         No    English           Coach        PENDING 0
+#> 95         No    English           Coach    Physical ed 0
+#> 96         No    English           Coach Political sci. 0
+#> 97         No    English           Coach   Science 6-12 0
+#> 98         No    English           Coach    Vocal music 0
+#> 99         No    English         Teacher   English 6-12 1
+#> 100        No    English         Teacher   Instr. music 0
+#> 101        No    English         Teacher        PENDING 0
+#> 102        No    English         Teacher    Physical ed 0
+#> 103        No    English         Teacher Political sci. 0
+#> 104        No    English         Teacher   Science 6-12 0
+#> 105        No    English         Teacher    Vocal music 1
+#> 106        No      Music  Administration   English 6-12 0
+#> 107        No      Music  Administration   Instr. music 0
+#> 108        No      Music  Administration        PENDING 0
+#> 109        No      Music  Administration    Physical ed 0
+#> 110        No      Music  Administration Political sci. 0
+#> 111        No      Music  Administration   Science 6-12 0
+#> 112        No      Music  Administration    Vocal music 0
+#> 113        No      Music           Coach   English 6-12 0
+#> 114        No      Music           Coach   Instr. music 0
+#> 115        No      Music           Coach        PENDING 0
+#> 116        No      Music           Coach    Physical ed 0
+#> 117        No      Music           Coach Political sci. 0
+#> 118        No      Music           Coach   Science 6-12 0
+#> 119        No      Music           Coach    Vocal music 0
+#> 120        No      Music         Teacher   English 6-12 0
+#> 121        No      Music         Teacher   Instr. music 0
+#> 122        No      Music         Teacher        PENDING 0
+#> 123        No      Music         Teacher    Physical ed 0
+#> 124        No      Music         Teacher Political sci. 0
+#> 125        No      Music         Teacher   Science 6-12 0
+#> 126        No      Music         Teacher    Vocal music 0
+#> 127        No         PE  Administration   English 6-12 0
+#> 128        No         PE  Administration   Instr. music 0
+#> 129        No         PE  Administration        PENDING 0
+#> 130        No         PE  Administration    Physical ed 0
+#> 131        No         PE  Administration Political sci. 0
+#> 132        No         PE  Administration   Science 6-12 0
+#> 133        No         PE  Administration    Vocal music 0
+#> 134        No         PE           Coach   English 6-12 0
+#> 135        No         PE           Coach   Instr. music 0
+#> 136        No         PE           Coach        PENDING 0
+#> 137        No         PE           Coach    Physical ed 0
+#> 138        No         PE           Coach Political sci. 0
+#> 139        No         PE           Coach   Science 6-12 0
+#> 140        No         PE           Coach    Vocal music 0
+#> 141        No         PE         Teacher   English 6-12 0
+#> 142        No         PE         Teacher   Instr. music 0
+#> 143        No         PE         Teacher        PENDING 0
+#> 144        No         PE         Teacher    Physical ed 0
+#> 145        No         PE         Teacher Political sci. 0
+#> 146        No         PE         Teacher   Science 6-12 0
+#> 147        No         PE         Teacher    Vocal music 0
+#> 148        No    Physics  Administration   English 6-12 0
+#> 149        No    Physics  Administration   Instr. music 0
+#> 150        No    Physics  Administration        PENDING 0
+#> 151        No    Physics  Administration    Physical ed 0
+#> 152        No    Physics  Administration Political sci. 0
+#> 153        No    Physics  Administration   Science 6-12 0
+#> 154        No    Physics  Administration    Vocal music 0
+#> 155        No    Physics           Coach   English 6-12 0
+#> 156        No    Physics           Coach   Instr. music 0
+#> 157        No    Physics           Coach        PENDING 0
+#> 158        No    Physics           Coach    Physical ed 0
+#> 159        No    Physics           Coach Political sci. 0
+#> 160        No    Physics           Coach   Science 6-12 0
+#> 161        No    Physics           Coach    Vocal music 0
+#> 162        No    Physics         Teacher   English 6-12 0
+#> 163        No    Physics         Teacher   Instr. music 0
+#> 164        No    Physics         Teacher        PENDING 0
+#> 165        No    Physics         Teacher    Physical ed 0
+#> 166        No    Physics         Teacher Political sci. 0
+#> 167        No    Physics         Teacher   Science 6-12 0
+#> 168        No    Physics         Teacher    Vocal music 0
+#> 169        No    Science  Administration   English 6-12 0
+#> 170        No    Science  Administration   Instr. music 0
+#> 171        No    Science  Administration        PENDING 0
+#> 172        No    Science  Administration    Physical ed 0
+#> 173        No    Science  Administration Political sci. 0
+#> 174        No    Science  Administration   Science 6-12 0
+#> 175        No    Science  Administration    Vocal music 0
+#> 176        No    Science           Coach   English 6-12 0
+#> 177        No    Science           Coach   Instr. music 0
+#> 178        No    Science           Coach        PENDING 0
+#> 179        No    Science           Coach    Physical ed 0
+#> 180        No    Science           Coach Political sci. 0
+#> 181        No    Science           Coach   Science 6-12 0
+#> 182        No    Science           Coach    Vocal music 0
+#> 183        No    Science         Teacher   English 6-12 0
+#> 184        No    Science         Teacher   Instr. music 0
+#> 185        No    Science         Teacher        PENDING 1
+#> 186        No    Science         Teacher    Physical ed 0
+#> 187        No    Science         Teacher Political sci. 0
+#> 188        No    Science         Teacher   Science 6-12 0
+#> 189        No    Science         Teacher    Vocal music 0
+#> 190        No       <NA>  Administration   English 6-12 0
+#> 191        No       <NA>  Administration   Instr. music 0
+#> 192        No       <NA>  Administration        PENDING 0
+#> 193        No       <NA>  Administration    Physical ed 0
+#> 194        No       <NA>  Administration Political sci. 0
+#> 195        No       <NA>  Administration   Science 6-12 0
+#> 196        No       <NA>  Administration    Vocal music 0
+#> 197        No       <NA>           Coach   English 6-12 0
+#> 198        No       <NA>           Coach   Instr. music 0
+#> 199        No       <NA>           Coach        PENDING 0
+#> 200        No       <NA>           Coach    Physical ed 0
+#>  [ reached 'max' / getOption("max.print") -- omitted 220 rows ]
+tabyl_nway(roster, full_time, subject, employee_status)
+#>    full_time    subject employee_status n
+#> 1         No Basketball  Administration 0
+#> 2         No Basketball           Coach 1
+#> 3         No Basketball         Teacher 0
+#> 4         No  Chemistry  Administration 0
+#> 5         No  Chemistry           Coach 0
+#> 6         No  Chemistry         Teacher 0
+#> 7         No       Dean  Administration 0
+#> 8         No       Dean           Coach 0
+#> 9         No       Dean         Teacher 0
+#> 10        No   Drafting  Administration 0
+#> 11        No   Drafting           Coach 0
+#> 12        No   Drafting         Teacher 0
+#> 13        No    English  Administration 0
+#> 14        No    English           Coach 0
+#> 15        No    English         Teacher 2
+#> 16        No      Music  Administration 0
+#> 17        No      Music           Coach 0
+#> 18        No      Music         Teacher 0
+#> 19        No         PE  Administration 0
+#> 20        No         PE           Coach 0
+#> 21        No         PE         Teacher 0
+#> 22        No    Physics  Administration 0
+#> 23        No    Physics           Coach 0
+#> 24        No    Physics         Teacher 0
+#> 25        No    Science  Administration 0
+#> 26        No    Science           Coach 0
+#> 27        No    Science         Teacher 1
+#> 28        No       <NA>  Administration 0
+#> 29        No       <NA>           Coach 1
+#> 30        No       <NA>         Teacher 0
+#> 31       Yes Basketball  Administration 0
+#> 32       Yes Basketball           Coach 0
+#> 33       Yes Basketball         Teacher 0
+#> 34       Yes  Chemistry  Administration 0
+#> 35       Yes  Chemistry           Coach 0
+#> 36       Yes  Chemistry         Teacher 1
+#> 37       Yes       Dean  Administration 1
+#> 38       Yes       Dean           Coach 0
+#> 39       Yes       Dean         Teacher 0
+#> 40       Yes   Drafting  Administration 0
+#> 41       Yes   Drafting           Coach 0
+#> 42       Yes   Drafting         Teacher 1
+#> 43       Yes    English  Administration 0
+#> 44       Yes    English           Coach 0
+#> 45       Yes    English         Teacher 0
+#> 46       Yes      Music  Administration 0
+#> 47       Yes      Music           Coach 0
+#> 48       Yes      Music         Teacher 1
+#> 49       Yes         PE  Administration 0
+#> 50       Yes         PE           Coach 0
+#> 51       Yes         PE         Teacher 1
+#> 52       Yes    Physics  Administration 0
+#> 53       Yes    Physics           Coach 0
+#> 54       Yes    Physics         Teacher 1
+#> 55       Yes    Science  Administration 0
+#> 56       Yes    Science           Coach 0
+#> 57       Yes    Science         Teacher 0
+#> 58       Yes       <NA>  Administration 0
+#> 59       Yes       <NA>           Coach 0
+#> 60       Yes       <NA>         Teacher 1
+
+# For four or more variables:
+tabyl_nway(roster, full_time, subject, employee_status, cert)
+#>     full_time    subject employee_status           cert n
+#> 1          No Basketball  Administration   English 6-12 0
+#> 2          No Basketball  Administration   Instr. music 0
+#> 3          No Basketball  Administration        PENDING 0
+#> 4          No Basketball  Administration    Physical ed 0
+#> 5          No Basketball  Administration Political sci. 0
+#> 6          No Basketball  Administration   Science 6-12 0
+#> 7          No Basketball  Administration    Vocal music 0
+#> 8          No Basketball           Coach   English 6-12 0
+#> 9          No Basketball           Coach   Instr. music 0
+#> 10         No Basketball           Coach        PENDING 0
+#> 11         No Basketball           Coach    Physical ed 1
+#> 12         No Basketball           Coach Political sci. 0
+#> 13         No Basketball           Coach   Science 6-12 0
+#> 14         No Basketball           Coach    Vocal music 0
+#> 15         No Basketball         Teacher   English 6-12 0
+#> 16         No Basketball         Teacher   Instr. music 0
+#> 17         No Basketball         Teacher        PENDING 0
+#> 18         No Basketball         Teacher    Physical ed 0
+#> 19         No Basketball         Teacher Political sci. 0
+#> 20         No Basketball         Teacher   Science 6-12 0
+#> 21         No Basketball         Teacher    Vocal music 0
+#> 22         No  Chemistry  Administration   English 6-12 0
+#> 23         No  Chemistry  Administration   Instr. music 0
+#> 24         No  Chemistry  Administration        PENDING 0
+#> 25         No  Chemistry  Administration    Physical ed 0
+#> 26         No  Chemistry  Administration Political sci. 0
+#> 27         No  Chemistry  Administration   Science 6-12 0
+#> 28         No  Chemistry  Administration    Vocal music 0
+#> 29         No  Chemistry           Coach   English 6-12 0
+#> 30         No  Chemistry           Coach   Instr. music 0
+#> 31         No  Chemistry           Coach        PENDING 0
+#> 32         No  Chemistry           Coach    Physical ed 0
+#> 33         No  Chemistry           Coach Political sci. 0
+#> 34         No  Chemistry           Coach   Science 6-12 0
+#> 35         No  Chemistry           Coach    Vocal music 0
+#> 36         No  Chemistry         Teacher   English 6-12 0
+#> 37         No  Chemistry         Teacher   Instr. music 0
+#> 38         No  Chemistry         Teacher        PENDING 0
+#> 39         No  Chemistry         Teacher    Physical ed 0
+#> 40         No  Chemistry         Teacher Political sci. 0
+#> 41         No  Chemistry         Teacher   Science 6-12 0
+#> 42         No  Chemistry         Teacher    Vocal music 0
+#> 43         No       Dean  Administration   English 6-12 0
+#> 44         No       Dean  Administration   Instr. music 0
+#> 45         No       Dean  Administration        PENDING 0
+#> 46         No       Dean  Administration    Physical ed 0
+#> 47         No       Dean  Administration Political sci. 0
+#> 48         No       Dean  Administration   Science 6-12 0
+#> 49         No       Dean  Administration    Vocal music 0
+#> 50         No       Dean           Coach   English 6-12 0
+#> 51         No       Dean           Coach   Instr. music 0
+#> 52         No       Dean           Coach        PENDING 0
+#> 53         No       Dean           Coach    Physical ed 0
+#> 54         No       Dean           Coach Political sci. 0
+#> 55         No       Dean           Coach   Science 6-12 0
+#> 56         No       Dean           Coach    Vocal music 0
+#> 57         No       Dean         Teacher   English 6-12 0
+#> 58         No       Dean         Teacher   Instr. music 0
+#> 59         No       Dean         Teacher        PENDING 0
+#> 60         No       Dean         Teacher    Physical ed 0
+#> 61         No       Dean         Teacher Political sci. 0
+#> 62         No       Dean         Teacher   Science 6-12 0
+#> 63         No       Dean         Teacher    Vocal music 0
+#> 64         No   Drafting  Administration   English 6-12 0
+#> 65         No   Drafting  Administration   Instr. music 0
+#> 66         No   Drafting  Administration        PENDING 0
+#> 67         No   Drafting  Administration    Physical ed 0
+#> 68         No   Drafting  Administration Political sci. 0
+#> 69         No   Drafting  Administration   Science 6-12 0
+#> 70         No   Drafting  Administration    Vocal music 0
+#> 71         No   Drafting           Coach   English 6-12 0
+#> 72         No   Drafting           Coach   Instr. music 0
+#> 73         No   Drafting           Coach        PENDING 0
+#> 74         No   Drafting           Coach    Physical ed 0
+#> 75         No   Drafting           Coach Political sci. 0
+#> 76         No   Drafting           Coach   Science 6-12 0
+#> 77         No   Drafting           Coach    Vocal music 0
+#> 78         No   Drafting         Teacher   English 6-12 0
+#> 79         No   Drafting         Teacher   Instr. music 0
+#> 80         No   Drafting         Teacher        PENDING 0
+#> 81         No   Drafting         Teacher    Physical ed 0
+#> 82         No   Drafting         Teacher Political sci. 0
+#> 83         No   Drafting         Teacher   Science 6-12 0
+#> 84         No   Drafting         Teacher    Vocal music 0
+#> 85         No    English  Administration   English 6-12 0
+#> 86         No    English  Administration   Instr. music 0
+#> 87         No    English  Administration        PENDING 0
+#> 88         No    English  Administration    Physical ed 0
+#> 89         No    English  Administration Political sci. 0
+#> 90         No    English  Administration   Science 6-12 0
+#> 91         No    English  Administration    Vocal music 0
+#> 92         No    English           Coach   English 6-12 0
+#> 93         No    English           Coach   Instr. music 0
+#> 94         No    English           Coach        PENDING 0
+#> 95         No    English           Coach    Physical ed 0
+#> 96         No    English           Coach Political sci. 0
+#> 97         No    English           Coach   Science 6-12 0
+#> 98         No    English           Coach    Vocal music 0
+#> 99         No    English         Teacher   English 6-12 1
+#> 100        No    English         Teacher   Instr. music 0
+#> 101        No    English         Teacher        PENDING 0
+#> 102        No    English         Teacher    Physical ed 0
+#> 103        No    English         Teacher Political sci. 0
+#> 104        No    English         Teacher   Science 6-12 0
+#> 105        No    English         Teacher    Vocal music 1
+#> 106        No      Music  Administration   English 6-12 0
+#> 107        No      Music  Administration   Instr. music 0
+#> 108        No      Music  Administration        PENDING 0
+#> 109        No      Music  Administration    Physical ed 0
+#> 110        No      Music  Administration Political sci. 0
+#> 111        No      Music  Administration   Science 6-12 0
+#> 112        No      Music  Administration    Vocal music 0
+#> 113        No      Music           Coach   English 6-12 0
+#> 114        No      Music           Coach   Instr. music 0
+#> 115        No      Music           Coach        PENDING 0
+#> 116        No      Music           Coach    Physical ed 0
+#> 117        No      Music           Coach Political sci. 0
+#> 118        No      Music           Coach   Science 6-12 0
+#> 119        No      Music           Coach    Vocal music 0
+#> 120        No      Music         Teacher   English 6-12 0
+#> 121        No      Music         Teacher   Instr. music 0
+#> 122        No      Music         Teacher        PENDING 0
+#> 123        No      Music         Teacher    Physical ed 0
+#> 124        No      Music         Teacher Political sci. 0
+#> 125        No      Music         Teacher   Science 6-12 0
+#> 126        No      Music         Teacher    Vocal music 0
+#> 127        No         PE  Administration   English 6-12 0
+#> 128        No         PE  Administration   Instr. music 0
+#> 129        No         PE  Administration        PENDING 0
+#> 130        No         PE  Administration    Physical ed 0
+#> 131        No         PE  Administration Political sci. 0
+#> 132        No         PE  Administration   Science 6-12 0
+#> 133        No         PE  Administration    Vocal music 0
+#> 134        No         PE           Coach   English 6-12 0
+#> 135        No         PE           Coach   Instr. music 0
+#> 136        No         PE           Coach        PENDING 0
+#> 137        No         PE           Coach    Physical ed 0
+#> 138        No         PE           Coach Political sci. 0
+#> 139        No         PE           Coach   Science 6-12 0
+#> 140        No         PE           Coach    Vocal music 0
+#> 141        No         PE         Teacher   English 6-12 0
+#> 142        No         PE         Teacher   Instr. music 0
+#> 143        No         PE         Teacher        PENDING 0
+#> 144        No         PE         Teacher    Physical ed 0
+#> 145        No         PE         Teacher Political sci. 0
+#> 146        No         PE         Teacher   Science 6-12 0
+#> 147        No         PE         Teacher    Vocal music 0
+#> 148        No    Physics  Administration   English 6-12 0
+#> 149        No    Physics  Administration   Instr. music 0
+#> 150        No    Physics  Administration        PENDING 0
+#> 151        No    Physics  Administration    Physical ed 0
+#> 152        No    Physics  Administration Political sci. 0
+#> 153        No    Physics  Administration   Science 6-12 0
+#> 154        No    Physics  Administration    Vocal music 0
+#> 155        No    Physics           Coach   English 6-12 0
+#> 156        No    Physics           Coach   Instr. music 0
+#> 157        No    Physics           Coach        PENDING 0
+#> 158        No    Physics           Coach    Physical ed 0
+#> 159        No    Physics           Coach Political sci. 0
+#> 160        No    Physics           Coach   Science 6-12 0
+#> 161        No    Physics           Coach    Vocal music 0
+#> 162        No    Physics         Teacher   English 6-12 0
+#> 163        No    Physics         Teacher   Instr. music 0
+#> 164        No    Physics         Teacher        PENDING 0
+#> 165        No    Physics         Teacher    Physical ed 0
+#> 166        No    Physics         Teacher Political sci. 0
+#> 167        No    Physics         Teacher   Science 6-12 0
+#> 168        No    Physics         Teacher    Vocal music 0
+#> 169        No    Science  Administration   English 6-12 0
+#> 170        No    Science  Administration   Instr. music 0
+#> 171        No    Science  Administration        PENDING 0
+#> 172        No    Science  Administration    Physical ed 0
+#> 173        No    Science  Administration Political sci. 0
+#> 174        No    Science  Administration   Science 6-12 0
+#> 175        No    Science  Administration    Vocal music 0
+#> 176        No    Science           Coach   English 6-12 0
+#> 177        No    Science           Coach   Instr. music 0
+#> 178        No    Science           Coach        PENDING 0
+#> 179        No    Science           Coach    Physical ed 0
+#> 180        No    Science           Coach Political sci. 0
+#> 181        No    Science           Coach   Science 6-12 0
+#> 182        No    Science           Coach    Vocal music 0
+#> 183        No    Science         Teacher   English 6-12 0
+#> 184        No    Science         Teacher   Instr. music 0
+#> 185        No    Science         Teacher        PENDING 1
+#> 186        No    Science         Teacher    Physical ed 0
+#> 187        No    Science         Teacher Political sci. 0
+#> 188        No    Science         Teacher   Science 6-12 0
+#> 189        No    Science         Teacher    Vocal music 0
+#> 190        No       <NA>  Administration   English 6-12 0
+#> 191        No       <NA>  Administration   Instr. music 0
+#> 192        No       <NA>  Administration        PENDING 0
+#> 193        No       <NA>  Administration    Physical ed 0
+#> 194        No       <NA>  Administration Political sci. 0
+#> 195        No       <NA>  Administration   Science 6-12 0
+#> 196        No       <NA>  Administration    Vocal music 0
+#> 197        No       <NA>           Coach   English 6-12 0
+#> 198        No       <NA>           Coach   Instr. music 0
+#> 199        No       <NA>           Coach        PENDING 0
+#> 200        No       <NA>           Coach    Physical ed 0
+#>  [ reached 'max' / getOption("max.print") -- omitted 220 rows ]
 ```
+
+tabyl_nway() also supports the argument show_na = FALSE to exclude rows
+with NA in any of the specified variables.
 
 #### Adorning tabyls
 
