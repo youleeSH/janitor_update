@@ -1,4 +1,35 @@
-# 권장 패키지 자동설치
+# ------------------------------------------------------------------------------
+# Title: Beautiful Shiny Dashboard for Data Cleaning & Visualization
+# ------------------------------------------------------------------------------
+# Description:
+#   - CSV/XLSX 파일 업로드, 데이터 전처리(결측/이상치/중복/타입변경/합치기 등) 및
+#     시각화(1~3개 변수 조합, 자동 추천 등)를 통합 지원하는 R Shiny 대시보드입니다.
+#   - 결측치/이상치 탐색 시각화, 변수별 타입 즉시 변경(드롭다운), 데이터 정제 CSV 저장,
+#     각종 UI 옵션(슬라이더, select, actionButton 등) 포함.
+#
+# Main Features:
+#   * 데이터 업로드 및 헤더/컬럼명 자동 정제
+#   * 변수 타입 자동 감지 및 드롭다운 즉시 변경
+#   * 결측치/이상치 탐색 및 시각화
+#   * 중복, 상수, 빈행/열 제거 및 여러 컬럼 coalesce 지원
+#   * 다양한 시각화 플롯(히스토그램, 박스플롯, 산점도, 막대, 비율)
+#   * 정제 데이터 미리보기, 다운로드, UI 선택지 연동
+#
+# Usage:
+#   - RStudio에서 파일 실행 후 웹브라우저에서 앱 접속
+#   - csv/xlsx 업로드 → 옵션 선택/적용 → 시각화 및 다운로드
+#
+# Requirements:
+#   - R 4.x 이상
+#   - shiny, shinydashboard, DT, janitor, ggplot2, readxl, dplyr, lubridate 패키지
+#
+# Author: Daeun522
+# License: MIT (or your project license)
+# Github: https://github.com/youleeSH/jskm_update
+# Created: 2024-07-04
+# ------------------------------------------------------------------------------
+
+# 권장 패키지 자동설치----------------------------------------------------------
 req_pkgs <- c("shiny", "shinydashboard", "DT", "janitor", "ggplot2", "readxl", "dplyr", "lubridate")
 for(pkg in req_pkgs) if(!requireNamespace(pkg, quietly = TRUE)) install.packages(pkg)
 
@@ -11,7 +42,7 @@ library(readxl)
 library(dplyr)
 library(lubridate)
 
-# --- 결측/이상치 함수 정의 ---
+# --- 결측/이상치 함수 정의 ----------------------------------------------------
 inspect_missing <- function(df, sort = TRUE, top_n = NULL) {
   miss_pct <- sapply(df, function(x) mean(is.na(x)))
   miss_df <- data.frame(
@@ -68,7 +99,7 @@ identify_outliers <- function(df, method = c("iqr", "zscore", "percentile"),
   outlier_flags$outlier_row <- outlier_flags$total_outliers > 0
   return(outlier_flags)
 }
-# --- 타입 자동 변환 함수 ---
+# --- 타입 자동 변환 함수 ------------------------------------------------------
 auto_convert_types <- function(df) {
   for (col in names(df)) {
     if (is.character(df[[col]])) {
@@ -91,6 +122,7 @@ auto_convert_types <- function(df) {
   df
 }
 
+##beautiful shiny dashboard-----------------------------------------------------
 ui <- dashboardPage(
   dashboardHeader(title = "Beautiful Shiny Dashboard"),
   dashboardSidebar(
@@ -337,7 +369,7 @@ server <- function(input, output, session) {
     par(mfrow = c(1,1))
   })
   
-  # ---- 이하 시각화 코드는 이전과 동일 -----
+  # ---- 시각화----
   get_data_for_plot <- reactive({
     if (isTRUE(input$show_cleaned_plot)) cleaned_data() else raw_data()
   })
