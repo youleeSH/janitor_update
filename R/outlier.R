@@ -1,51 +1,43 @@
-#' Identify outliers in numeric columns of a data frame.
-#'
-#' This function detects outliers in the specified columns of a data frame using one of three methods:
-#' Interquartile Range (IQR), Z-score, or percentile-based thresholds. The result is a logical data.frame
-#' indicating outlier status for each cell and summary columns indicating total outliers per row.
-#'
-#' @param df A data.frame or tibble containing the data to be analyzed.
-#' @param method The method to use for outlier detection. Options are:
-#'   - `"iqr"`: Values beyond 1.5 * IQR from Q1 and Q3.
-#'   - `"zscore"`: Absolute Z-score greater than `z_thresh`.
-#'   - `"percentile"`: Values below or above the given lower and upper percentiles.
-#' @param columns Optional character vector specifying which numeric columns to analyze.
-#'   If NULL (default), all numeric columns are used.
-#' @param z_thresh Threshold for Z-score method (default is 3).
-#' @param lower_percentile Lower bound percentile for the percentile method (default is 0.01).
-#' @param upper_percentile Upper bound percentile for the percentile method (default is 0.99).
-#'
-#' @return A data.frame with:
-#'   - One logical column per target variable indicating outlier status (`TRUE`/`FALSE`)
-#'   - A `total_outliers` column summing how many variables are outliers for each row
-#'   - An `outlier_row` column marking rows that contain at least one outlier
-#'
-#' @examples
-#' df <- data.frame(x = c(1, 2, 3, 100), y = c(5, 6, 7, 200))
-#' identify_outliers(df, method = "iqr")
-#'
-#' @export
-#' 
+identify_outliers <- function(df, 
+                              method = c("iqr", "zscore", "percentile"), 
+                              column, 
+                              z_thresh = 3, 
+                              lower_percentile = 0.01, 
+                              upper_percentile = 0.99,
+                              visualize = TRUE) {
 
-
-identify_outliers <- function(df, method = c("iqr", "zscore", "percentile"), 
-                              columns = NULL, z_thresh = 3, 
-                              lower_percentile = 0.01, upper_percentile = 0.99) {
-  method <- match.arg(method)
-  
-  if (!is.data.frame(df)) stop("df must be a data.frame or tibble.")
-  if (is.null(columns)) {
-    numeric_cols <- sapply(df, is.numeric)
-    columns <- names(df)[numeric_cols]
+  required_packages <- c("ggplot2", "dplyr", "patchwork")
+  for (pkg in required_packages) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      install.packages(pkg)
+    }
+    library(pkg, character.only = TRUE)
   }
   
-  outlier_flags <- data.frame(row = 1:nrow(df))
+  if (!is.data.frame(df)) stop("입력은 data.frame 또는 tibble 이어야 합니다.")
   
-  for (col in columns) {
-    if (!col%in% names(df)){
-      stop(paste0("Column '",col,"' does not exist in the data frame."))
-    }
+  cat("📌 데이터프레임 변수들의 타입:\n")
+  print(sapply(df, class))
+  
+  if (missing(column)) stop("❗ 'column' 인자를 지정해야 합니다.")
+  if (any(!column %in% names(df))) {
+    stop("❗ 지정한 변수들 중 데이터프레임에 존재하지 않는 변수가 있습니다.")
+  }
+  
+  method <- match.arg(method)
+  outlier_results <- list()
+  plots <- list()
+  
+  for (col in column) {
+    cat(paste0("\n🔍 변수 처리 중: ", col, "\n"))
+    
     vec <- df[[col]]
+    if (!is.numeric(vec)) {
+      warning(paste0("⚠️ '", col, "' 변수는 수치형이 아니므로 건너뜁니다."))
+      next
+    }
+    
+    is_outlier <- rep(FALSE, length(vec))
     
     if (method == "iqr") {
       Q1 <- quantile(vec, 0.25, na.rm = TRUE)
@@ -53,21 +45,47 @@ identify_outliers <- function(df, method = c("iqr", "zscore", "percentile"),
       IQR <- Q3 - Q1
       lower <- Q1 - 1.5 * IQR
       upper <- Q3 + 1.5 * IQR
-      outlier_flags[[col]] <- vec < lower | vec > upper
+      is_outlier <- vec < lower | vec > upper
       
     } else if (method == "zscore") {
       z <- scale(vec)
-      outlier_flags[[col]] <- abs(z) > z_thresh
+      is_outlier <- abs(z) > z_thresh
       
     } else if (method == "percentile") {
       lower <- quantile(vec, lower_percentile, na.rm = TRUE)
       upper <- quantile(vec, upper_percentile, na.rm = TRUE)
-      outlier_flags[[col]] <- vec < lower | vec > upper
+      is_outlier <- vec < lower | vec > upper
+    }
+    
+    outlier_idx <- which(is_outlier %in% TRUE)
+    outlier_values <- data.frame(
+      row = outlier_idx,
+      value = vec[outlier_idx]
+    )
+    
+    cat(paste0("✅ '", col, "' 변수에서 ", nrow(outlier_values), "개의 이상치가 탐지되었습니다:\n"))
+    print(outlier_values)
+    
+    outlier_results[[col]] <- outlier_values
+    
+    # ✅ 박스플롯 객체만 만들어 저장
+    if (visualize) {
+      p <- ggplot(df, aes_string(y = col)) +
+        geom_boxplot(outlier.colour = "red", fill = "skyblue", alpha = 0.6, na.rm = TRUE) +
+        labs(title = paste("Boxplot of", col), y = col) +
+        theme_minimal()
+      plots[[col]] <- p
     }
   }
   
-  outlier_flags$total_outliers <- rowSums(outlier_flags[ , -1,drop=FALSE], na.rm = TRUE)
-  outlier_flags$outlier_row <- outlier_flags$total_outliers > 0
+  # ✅ 화면에 한 번에 여러 박스플롯 출력
+  if (visualize && length(plots) > 0) {
+    combined_plot <- Reduce(`|`, plots)  # 좌우로 배치
+    print(combined_plot)
+  }
   
-  return(outlier_flags)
+  return(invisible(list(
+    outlier_rows = outlier_results,
+    method_used = method
+  )))
 }
