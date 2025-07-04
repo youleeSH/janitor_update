@@ -500,7 +500,7 @@ server <- function(input, output, session) {
         plot.new(); text(0.5, 0.5, "만들 수 없는 플롯입니다", cex=2, col="red")
       }
     } else {
-      plot.new(); text(0.5, 0.5, "만들 수 없는 플롯입니다", cex=2, col="red")
+      plot.new(); text(0.5, 0.5, "만들 수 없는 플롯입니다.", cex=2, col="red")
     }
   })
 }
