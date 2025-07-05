@@ -62,52 +62,6 @@ summarize_factors <- function(df, top_n = 5, show_na = TRUE) {
 
 
 
-#' Identify and summarize duplicate rows in a data frame
-#'
-#' Detects duplicate rows based on one or more specified columns and optionally returns them in grouped form.
-#'
-#' @param df A data.frame to check for duplicates.
-#' @param by Optional character vector of column names to check for duplication. If NULL, all columns are used.
-#' @param return One of "summary", "data", or "grouped". Controls the output type (default: "summary").
-#' @param grouped Logical. If TRUE and return = "grouped", returns grouped rows with same duplicate key.
-#'
-#' @return A printed summary message, or a data.frame of duplicates, optionally grouped.
-#' @examples
-#' identify_duplicates(df, by = "id", return = "grouped")
-identify_duplicates <- function(df, by = NULL, return = "summary", grouped = FALSE) {
-  if (!is.data.frame(df)) stop("df must be a data.frame.")
-  
-  if (is.null(by)) {
-    dup_logical <- duplicated(df)
-  } else {
-    dup_logical <- duplicated(df[, by, drop = FALSE])
-  }
-  
-  dup_count <- sum(dup_logical)
-  total <- nrow(df)
-  
-  if (return == "summary") {
-    cat(paste0("총 중복 행: ", dup_count, " (", round(100 * dup_count / total, 2), "%)\n"))
-    
-  } else if (return == "data") {
-    return(df[dup_logical, , drop = FALSE])
-    
-  } else if (return == "grouped") {
-    if (is.null(by)) stop("You must specify `by` when using return = 'grouped'.")
-    
-    grouped_df <- df %>%
-      group_by(across(all_of(by))) %>%
-      filter(n() > 1) %>%
-      arrange(across(all_of(by))) %>%
-      ungroup()
-    
-    return(grouped_df)
-  } else {
-    stop("Invalid value for `return`: must be one of 'summary', 'data', or 'grouped'")
-  }
-}
-
-
 
 #' Summarize all numeric columns in a data frame
 #'
