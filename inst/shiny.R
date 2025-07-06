@@ -63,9 +63,9 @@ inspect_missing <- function(df, sort = TRUE, top_n = NULL) {
     theme_minimal()
 }
 
-identify_outliers <- function(df, method = c("iqr", "zscore", "percentile"), 
-                              columns = NULL, z_thresh = 3, 
-                              lower_percentile = 0.01, upper_percentile = 0.99) {
+find_outliers <- function(df, method = c("iqr", "zscore", "percentile"), 
+                          columns = NULL, z_thresh = 3, 
+                          lower_percentile = 0.01, upper_percentile = 0.99) {
   method <- match.arg(method)
   if (!is.data.frame(df)) stop("df must be a data.frame or tibble.")
   if (is.null(columns)) {
@@ -348,13 +348,13 @@ server <- function(input, output, session) {
   })
   output$outlier_table <- renderDT({
     req(cleaned_data(), input$outlier_vars)
-    flag <- identify_outliers(cleaned_data(), method = input$outlier_method, columns = input$outlier_vars)
+    flag <- find_outliers(cleaned_data(), method = input$outlier_method, columns = input$outlier_vars)
     datatable(flag, options = list(pageLength = 10, scrollX = TRUE))
   })
   output$outlier_plot <- renderPlot({
     req(cleaned_data(), input$outlier_vars)
     df <- cleaned_data()
-    flag <- identify_outliers(df, method = input$outlier_method, columns = input$outlier_vars)
+    flag <- find_outliers(df, method = input$outlier_method, columns = input$outlier_vars)
     vars <- input$outlier_vars
     if (length(vars) == 0) return()
     par(mfrow = c(1, length(vars)))
@@ -504,3 +504,4 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+
