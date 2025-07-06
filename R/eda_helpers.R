@@ -32,6 +32,8 @@ clean_levels <- function(df, col, min_freq = 10, other_label = "Other", ignore_c
 }
 
 
+
+
 #' Summarize the top levels of all categorical variables in a data frame
 #'
 #' Produces a tabyl-style frequency summary for each factor or character column.

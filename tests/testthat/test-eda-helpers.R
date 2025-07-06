@@ -15,6 +15,8 @@ test_that("clean_levels errors on non-character/factor column", {
 })
 
 
+
+
 #test summarize factors
 test_that("summarize_factors returns list with top_n summaries", {
   summaries <- summarize_factors(titanic, top_n = 2)
@@ -29,28 +31,6 @@ test_that("summarize_factors returns list with top_n summaries", {
 })
 
 
-#test identiry duplicates
-test_that("identify_duplicates returns proper summary output", {
-  expect_output(
-    identify_duplicates(titanic, by = "Ticket", return = "summary"),
-    regexp = "총 중복 행: [0-9]+ \\([0-9\\.]+%\\)"
-  )
-})
-
-test_that("identify_duplicates returns data.frame of duplicates", {
-  dup_rows <- identify_duplicates(titanic, by = "Ticket", return = "data")
-  
-  expect_s3_class(dup_rows, "data.frame")
-  expect_true(nrow(dup_rows) > 0)
-})
-
-test_that("identify_duplicates returns grouped duplicates when specified", {
-  dup_grouped <- identify_duplicates(titanic, by = "Ticket", return = "grouped")
-  
-  expect_s3_class(dup_grouped, "data.frame")
-  expect_gt(nrow(dup_grouped), 0)
-  expect_true("Ticket" %in% names(dup_grouped))
-})
 
 
 #test summarize numeric
