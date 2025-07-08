@@ -1,12 +1,10 @@
 # test-identify_outliers.R
 
-# 필수 패키지 로드
 if (!requireNamespace("testthat", quietly = TRUE)) {
   install.packages("testthat")
 }
 library(testthat)
 
-# 함수 불러오기 전제: source("identify_outliers.R") 또는 동일 환경 내 정의되어 있어야 함
 
 test_that("identify_outliers works with IQR method", {
   df <- data.frame(x = c(1:10, 100), y = c(5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 200))
