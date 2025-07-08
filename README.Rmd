@@ -69,7 +69,13 @@ install.packages("janitor", repos = c("https://sfirke.r-universe.dev", "https://
 
 A full description of each function, organized by topic, can be found in janitor's [catalog of functions vignette](https://sfirke.github.io/janitor/articles/janitor.html).  There you will find functions not mentioned in this README, like `compare_df_cols()` which provides a summary of differences in column names and types when given a set of data.frames.
 
-Below are quick examples of how janitor tools are commonly used.    
+Below are quick examples of how janitor tools are commonly used.
+
+
+## Full Reference Manual (CRAN)
+
+For a complete list of functions with usage and examples, refer to the official CRAN reference manual:  
+[janitor.pdf](https://cran.r-project.org/web/packages/janitor/janitor.pdf)
 
 ### Cleaning dirty data
 
