@@ -155,11 +155,11 @@ Then:
 
 4. In the PR, describe:
 
-  - What the change does
+    - What the change does
 
-  - Why it’s needed
+    - Why it’s needed
 
-  - Any important implementation notes
+    - Any important implementation notes
 
 ## Communicating with Maintainers
 
