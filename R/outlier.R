@@ -99,7 +99,8 @@ identify_outliers <- function(df,
     outlier_results[[col]] <- outlier_values
     
     if (visualize) {
-      p <- ggplot(df, aes_string(y = col)) +
+      col_sym <- sym(col)
+      p <- ggplot(df, aes(y = !!col_sym)) +
         geom_boxplot(outlier.colour = "red", fill = "skyblue", alpha = 0.6, na.rm = TRUE) +
         labs(title = paste("Boxplot of", col), y = col) +
         theme_minimal()
